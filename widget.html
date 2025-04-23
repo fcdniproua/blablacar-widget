@@ -41,6 +41,12 @@
   <script defer src="https://ims.blablacar.pro/white-label/widget/assets/js/manifest.js"></script>
   <script defer src="https://ims.blablacar.pro/white-label/widget/assets/js/vendor.js"></script>
   <script defer src="https://ims.blablacar.pro/white-label/widget/assets/js/app.js"></script>
+  <script>
+  window.addEventListener('load', () => {
+  const height = document.body.scrollHeight;
+  window.parent.postMessage({ iframeHeight: height }, '*');
+});
+</script>
 </body>
 </html>
 
