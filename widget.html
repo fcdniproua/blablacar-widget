@@ -45,8 +45,16 @@
   window.addEventListener('load', () => {
   const height = document.body.scrollHeight;
   window.parent.postMessage({ iframeHeight: height }, '*');
-  let btn = document.getElementsByClassName('octobus__button');
-btn[0].addEventListener('click', function() {console.log(a)} ) 
+  const interval = setInterval(() => {
+    const btn = document.querySelector('.octobus__button');
+    if (btn) {
+      console.log('Кнопка знайдена!');
+      btn.addEventListener('click', () => {
+        console.log('Button clicked!');
+      });
+      clearInterval(interval);
+    }
+  }, 300);
 });
 
 </script>
