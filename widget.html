@@ -46,10 +46,7 @@
         const height = document.body.scrollHeight;
         window.parent.postMessage({ iframeHeight: height }, '*');
       }
-
-      // Авто-висота при завантаженні
-      window.addEventListener('load', sendHeightToParent);
-
+      
       // Авто-висота при будь-якій зміні DOM
       const observer = new MutationObserver(() => {
         sendHeightToParent();
