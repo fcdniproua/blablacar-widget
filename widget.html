@@ -41,23 +41,26 @@
   <script defer src="https://ims.blablacar.pro/white-label/widget/assets/js/manifest.js"></script>
   <script defer src="https://ims.blablacar.pro/white-label/widget/assets/js/vendor.js"></script>
   <script defer src="https://ims.blablacar.pro/white-label/widget/assets/js/app.js"></script>
-  <script>
-  window.addEventListener('load', () => {
-  const height = document.body.scrollHeight;
-  window.parent.postMessage({ iframeHeight: height }, '*');
-  const interval = setInterval(() => {
-    const btn = document.querySelector('.octobus__button');
-    if (btn) {
-      console.log('Кнопка знайдена!');
-      btn.addEventListener('click', () => {
-        console.log('Button clicked!');
-      });
-      clearInterval(interval);
-    }
-  }, 300);
-});
+    <script>
+      function sendHeightToParent() {
+        const height = document.body.scrollHeight;
+        window.parent.postMessage({ iframeHeight: height }, '*');
+      }
 
-</script>
+      // Авто-висота при завантаженні
+      window.addEventListener('load', sendHeightToParent);
+
+      // Авто-висота при будь-якій зміні DOM
+      const observer = new MutationObserver(() => {
+        sendHeightToParent();
+      });
+
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+      });
+    </script>
 </body>
 </html>
 
