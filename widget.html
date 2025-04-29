@@ -58,6 +58,24 @@
         attributes: true,
       });
     </script>
+  <script>
+  let parentHost = 'невідомо';
+
+  // Очікуємо повідомлення з батьківської сторінки
+  window.addEventListener('message', function(event) {
+    if (event.data && event.data.parentHost) {
+      parentHost = event.data.parentHost;
+      console.log('Parent host:', parentHost);
+
+      // 🔽 Тут ви можете, наприклад, вставити домен у DOM або передати його у ваш app.js
+      const infoDiv = document.createElement('div');
+      infoDiv.textContent = 'Завантажено в: ' + parentHost;
+      infoDiv.style = 'position:fixed;bottom:0;right:0;background:#eee;padding:5px;';
+      document.body.appendChild(infoDiv);
+    }
+  }, false);
+</script>
+
 </body>
 </html>
 
