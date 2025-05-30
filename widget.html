@@ -24,58 +24,52 @@
         media="all">
   <link rel="stylesheet"
         href="https://ims.blablacar.pro/white-label/widget/assets/print.css"
-        media="print">
+        media="print"
+        crossorigin="anonymous">
   <style>
-    body, html { margin:0; padding:0; }
-    #app { min-height: 600px; }
+    body, html { margin:0; padding:0; height: 100%; }
+    #app { min-height: 600px; height: 100%; overflow-y: auto; }
+    .iframe-container { height: 100vh; overflow: hidden; }
   </style>
 </head>
 <body>
-  <div id="app"
-       data-spa="1"
-       data-ptoken="f5059429-7229-40e7-a2c4-feb24471e21d"
-       data-lang="uk"
-       data-env="prod"></div>
+  <div class="iframe-container">
+    <div id="app"
+         data-spa="1"
+         data-ptoken="f5059429-7229-40e7-a2c4-feb24471e21d"
+         data-lang="uk"
+         data-env="prod"></div>
+  </div>
 
   <!-- Widget scripts with defer -->
   <script defer src="https://ims.blablacar.pro/white-label/widget/assets/js/manifest.js"></script>
   <script defer src="https://ims.blablacar.pro/white-label/widget/assets/js/vendor.js"></script>
   <script defer src="https://ims.blablacar.pro/white-label/widget/assets/js/app.js"></script>
-    <script>
-      function sendHeightToParent() {
-        const height = document.body.scrollHeight;
-        window.parent.postMessage({ iframeHeight: height }, '*');
-      }
-      
-      // Авто-висота при будь-якій зміні DOM
-      const observer = new MutationObserver(() => {
-        sendHeightToParent();
-      });
-
-      observer.observe(document.body, {
-        childList: true,
-        subtree: true,
-        attributes: true,
-      });
-    </script>
   <script>
-  let parentHost = 'невідомо';
-
-  // Очікуємо повідомлення з батьківської сторінки
-  window.addEventListener('message', function(event) {
-    if (event.data && event.data.parentHost) {
-      parentHost = event.data.parentHost;
-      console.log('Parent host:', parentHost);
-
-      // 🔽 Тут ви можете, наприклад, вставити домен у DOM або передати його у ваш app.js
-      const infoDiv = document.createElement('div');
-      infoDiv.textContent = 'Завантажено в: ' + parentHost;
-      infoDiv.style = 'position:fixed;bottom:0;right:0;background:#eee;padding:5px;';
-      document.body.appendChild(infoDiv);
+    function sendHeightToParent() {
+      const height = document.body.scrollHeight;
+      window.parent.postMessage({ iframeHeight: height }, '*');
     }
-  }, false);
-</script>
+    
+    // Авто-висота при будь-якій зміні DOM
+    const observer = new MutationObserver(() => {
+      sendHeightToParent();
+    });
 
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+    });
+
+    // Додаємо обробник скролу для нескінченного скролу
+    document.getElementById('app').addEventListener('scroll', function(e) {
+      const element = e.target;
+      if (element.scrollHeight - element.scrollTop === element.clientHeight) {
+        // Досягнуто кінця скролу, відправляємо повідомлення батьківському вікну
+        window.parent.postMessage({ scrollEnd: true }, '*');
+      }
+    });
+  </script>
 </body>
 </html>
-
