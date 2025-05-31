@@ -1,75 +1,354 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Preload and styles -->
-  <link rel="preload"
-        href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.1.1/css/bootstrap.min.css"
-        as="style"
-        onload="this.rel='stylesheet'">
-  <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.1.1/css/bootstrap.min.css"
-        crossorigin="anonymous">
-  <link rel="preload"
-        href="https://ims.blablacar.pro/white-label/widget/assets/css/app.css"
-        as="style"
-        onload="this.rel='stylesheet'">
-  <noscript>
-    <link rel="stylesheet"
-          href="https://ims.blablacar.pro/white-label/widget/assets/css/app.css">
-  </noscript>
-  <link rel="stylesheet"
-        href="https://ims.blablacar.pro/white-label/widget/assets/css/app.css"
-        media="all">
-  <link rel="stylesheet"
-        href="https://ims.blablacar.pro/white-label/widget/assets/print.css"
-        media="print"
-        crossorigin="anonymous">
-  <style>
-    body, html { margin:0; padding:0; height: 100%; }
-    #app { min-height: 600px; height: 100%; overflow-y: auto; }
-    .iframe-container { height: 100vh; overflow: hidden; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BlaBlaCar Widget</title>
+
+<!-- Preload критичних ресурсів -->
+<link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.1.1/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<link rel="preload" href="https://ims.blablacar.pro/white-label/widget/assets/css/app.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+
+<!-- Основні стилі -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.1.1/css/bootstrap.min.css" crossorigin="anonymous">
+<link rel="stylesheet" href="https://ims.blablacar.pro/white-label/widget/assets/css/app.css" media="all">
+<link rel="stylesheet" href="https://ims.blablacar.pro/white-label/widget/assets/print.css" media="print">
+
+<style>
+html, body {
+    margin: 0;
+    padding: 0;
+    height: auto;
+    min-height: 100vh;
+    overflow-x: hidden;
+    box-sizing: border-box;
+}
+
+#app {
+    min-height: 400px;
+    height: auto;
+    width: 100%;
+    overflow: visible;
+    box-sizing: border-box;
+}
+
+/* Забезпечуємо правильне відображення для всіх роутів */
+.container, .container-fluid {
+    height: auto !important;
+    min-height: auto !important;
+}
+
+/* Фікс для модальних вікон та попапів */
+.modal, .popup, .overlay {
+    position: fixed !important;
+    z-index: 9999 !important;
+}
+
+/* Стилі для різних сторінок віджета */
+body.route-search #app { min-height: 500px; }
+body.route-checkout #app { min-height: 600px; }
+body.route-success #app { min-height: 300px; }
+body.route-error #app { min-height: 300px; }
+</style>
 </head>
 <body>
-  <div class="iframe-container">
-    <div id="app"
-         data-spa="1"
-         data-ptoken="f5059429-7229-40e7-a2c4-feb24471e21d"
-         data-lang="uk"
-         data-env="prod"></div>
-  </div>
 
-  <!-- Widget scripts with defer -->
-  <script defer src="https://ims.blablacar.pro/white-label/widget/assets/js/manifest.js"></script>
-  <script defer src="https://ims.blablacar.pro/white-label/widget/assets/js/vendor.js"></script>
-  <script defer src="https://ims.blablacar.pro/white-label/widget/assets/js/app.js"></script>
-  <script>
-    function sendHeightToParent() {
-      const height = document.body.scrollHeight;
-      window.parent.postMessage({ iframeHeight: height }, '*');
-    }
+<!-- Основний віджет -->
+<div id="app" 
+     data-spa="1" 
+     data-ptoken="f5059429-7229-40e7-a2c4-feb24471e21d" 
+     data-lang="uk" 
+     data-env="prod"></div>
+
+<script>
+// Глобальні змінні для роботи віджета
+let currentRoute = '/';
+let lastHeight = 0;
+let heightCheckInterval;
+let routeCheckInterval;
+
+// Функція для визначення поточного роуту
+function getCurrentRoute() {
+    const path = window.location.pathname;
+    const hash = window.location.hash;
     
-    // Авто-висота при будь-якій зміні DOM
-    const observer = new MutationObserver(() => {
-      sendHeightToParent();
-    });
+    // Перевіряємо різні варіанти роутів
+    if (path.includes('/search') || hash.includes('search')) return 'search';
+    if (path.includes('/checkout') || hash.includes('checkout')) return 'checkout';
+    if (path.includes('/buy/success') || hash.includes('success')) return 'success';
+    if (path.includes('/buy/error') || hash.includes('error')) return 'error';
+    
+    return 'home';
+}
 
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-    });
+// Функція для відправки висоти батьківському вікну
+function sendHeightToParent() {
+    try {
+        // Отримуємо різні варіанти висоти
+        const bodyHeight = document.body.scrollHeight;
+        const bodyOffsetHeight = document.body.offsetHeight;
+        const appElement = document.getElementById('app');
+        const appHeight = appElement ? appElement.scrollHeight : 0;
+        const documentHeight = document.documentElement.scrollHeight;
+        const windowHeight = window.innerHeight;
+        
+        // Вибираємо максимальну висоту
+        const maxHeight = Math.max(
+            bodyHeight, 
+            bodyOffsetHeight, 
+            appHeight, 
+            documentHeight,
+            windowHeight
+        );
+        
+        // Мінімальна висота залежно від роуту
+        const route = getCurrentRoute();
+        let minHeight = 400;
+        
+        switch(route) {
+            case 'search': minHeight = 500; break;
+            case 'checkout': minHeight = 600; break;
+            case 'success': 
+            case 'error': minHeight = 300; break;
+        }
+        
+        const finalHeight = Math.max(maxHeight, minHeight);
+        
+        // Відправляємо тільки якщо висота змінилась
+        if (Math.abs(finalHeight - lastHeight) > 5) {
+            lastHeight = finalHeight;
+            
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({
+                    type: 'iframeResize',
+                    iframeHeight: finalHeight,
+                    route: route,
+                    source: 'blablacar-widget'
+                }, '*');
+            }
+        }
+        
+    } catch (error) {
+        console.warn('Помилка при відправці висоти:', error);
+    }
+}
 
-    // Додаємо обробник скролу для нескінченного скролу
-    document.getElementById('app').addEventListener('scroll', function(e) {
-      const element = e.target;
-      if (element.scrollHeight - element.scrollTop === element.clientHeight) {
-        // Досягнуто кінця скролу, відправляємо повідомлення батьківському вікну
-        window.parent.postMessage({ scrollEnd: true }, '*');
-      }
+// Функція для обробки зміни роуту
+function handleRouteChange(newRoute) {
+    if (newRoute !== currentRoute) {
+        currentRoute = newRoute;
+        
+        // Оновлюємо клас body для стилізації
+        document.body.className = `route-${newRoute}`;
+        
+        // Відправляємо інформацію про зміну роуту
+        if (window.parent && window.parent !== window) {
+            window.parent.postMessage({
+                type: 'routeChange',
+                route: newRoute,
+                url: window.location.href,
+                source: 'blablacar-widget'
+            }, '*');
+        }
+        
+        // Оновлюємо висоту після зміни роуту
+        setTimeout(sendHeightToParent, 100);
+        setTimeout(sendHeightToParent, 500);
+        setTimeout(sendHeightToParent, 1000);
+    }
+}
+
+// Перехоплення навігації для SPA
+function interceptNavigation() {
+    // Зберігаємо оригінальні методи
+    const originalPushState = history.pushState;
+    const originalReplaceState = history.replaceState;
+    
+    // Перехоплюємо pushState
+    history.pushState = function(state, title, url) {
+        originalPushState.call(history, state, title, url);
+        setTimeout(() => {
+            handleRouteChange(getCurrentRoute());
+        }, 50);
+    };
+    
+    // Перехоплюємо replaceState
+    history.replaceState = function(state, title, url) {
+        originalReplaceState.call(history, state, title, url);
+        setTimeout(() => {
+            handleRouteChange(getCurrentRoute());
+        }, 50);
+    };
+    
+    // Обробляємо popstate (кнопки назад/вперед)
+    window.addEventListener('popstate', function(event) {
+        setTimeout(() => {
+            handleRouteChange(getCurrentRoute());
+        }, 50);
     });
-  </script>
+    
+    // Обробляємо зміни hash
+    window.addEventListener('hashchange', function(event) {
+        setTimeout(() => {
+            handleRouteChange(getCurrentRoute());
+        }, 50);
+    });
+}
+
+// Спостерігач за змінами DOM
+const domObserver = new MutationObserver((mutations) => {
+    let shouldUpdate = false;
+    
+    mutations.forEach((mutation) => {
+        // Реагуємо на додавання/видалення елементів
+        if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+            shouldUpdate = true;
+        }
+        // Реагуємо на зміни стилів
+        if (mutation.type === 'attributes' && 
+            ['style', 'class', 'height'].includes(mutation.attributeName)) {
+            shouldUpdate = true;
+        }
+    });
+    
+    if (shouldUpdate) {
+        setTimeout(sendHeightToParent, 100);
+    }
+});
+
+// Функція ініціалізації
+function initializeWidget() {
+    console.log('Ініціалізація BlaBlaCar віджета...');
+    
+    // Встановлюємо початковий роут
+    handleRouteChange(getCurrentRoute());
+    
+    // Запускаємо перехоплення навігації
+    interceptNavigation();
+    
+    // Запускаємо спостерігач DOM
+    domObserver.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['style', 'class', 'height']
+    });
+    
+    // Інтенсивна перевірка висоти перші 15 секунд
+    let checkCount = 0;
+    const maxChecks = 30; // 15 секунд по 500мс
+    
+    heightCheckInterval = setInterval(() => {
+        sendHeightToParent();
+        checkCount++;
+        
+        if (checkCount >= maxChecks) {
+            clearInterval(heightCheckInterval);
+            // Переходимо на рідшу перевірку
+            setInterval(sendHeightToParent, 3000);
+        }
+    }, 500);
+    
+    // Періодична перевірка роуту
+    routeCheckInterval = setInterval(() => {
+        handleRouteChange(getCurrentRoute());
+    }, 1000);
+}
+
+// Обробка повідомлень від віджета
+window.addEventListener('message', function(event) {
+    try {
+        if (event.data && typeof event.data === 'object') {
+            
+            // Повідомлення про успішну оплату
+            if (event.data.type === 'payment_complete' || 
+                event.data.status === 'success' ||
+                event.data.event === 'purchase_success') {
+                
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage({
+                        type: 'payment_success',
+                        data: event.data,
+                        source: 'blablacar-widget'
+                    }, '*');
+                }
+                
+                // Перенаправляємо на сторінку успіху
+                setTimeout(() => {
+                    handleRouteChange('success');
+                }, 100);
+            }
+            
+            // Повідомлення про помилку оплати
+            if (event.data.type === 'payment_error' || 
+                event.data.status === 'error' ||
+                event.data.event === 'purchase_error') {
+                
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage({
+                        type: 'payment_error',
+                        data: event.data,
+                        source: 'blablacar-widget'
+                    }, '*');
+                }
+                
+                // Перенаправляємо на сторінку помилки
+                setTimeout(() => {
+                    handleRouteChange('error');
+                }, 100);
+            }
+            
+            // Оновлюємо висоту при будь-яких повідомленнях
+            setTimeout(sendHeightToParent, 200);
+        }
+    } catch (error) {
+        console.warn('Помилка обробки повідомлення:', error);
+    }
+});
+
+// Обробка помилок
+window.addEventListener('error', function(event) {
+    console.warn('JavaScript помилка:', event.error);
+    
+    // Якщо це 404 помилка, повідомляємо батька
+    if (event.message && (event.message.includes('404') || event.message.includes('Not Found'))) {
+        if (window.parent && window.parent !== window) {
+            window.parent.postMessage({
+                type: 'navigation_error',
+                error: '404',
+                url: window.location.href,
+                source: 'blablacar-widget'
+            }, '*');
+        }
+    }
+});
+
+// Обробка завантаження
+window.addEventListener('load', function() {
+    setTimeout(initializeWidget, 200);
+});
+
+window.addEventListener('resize', function() {
+    setTimeout(sendHeightToParent, 100);
+});
+
+// Якщо DOM вже готовий
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(initializeWidget, 100);
+    });
+} else {
+    setTimeout(initializeWidget, 100);
+}
+
+// Початкова відправка висоти
+setTimeout(sendHeightToParent, 300);
+</script>
+
+<!-- Скрипти віджета завантажуємо в кінці -->
+<script src="https://ims.blablacar.pro/white-label/widget/assets/js/manifest.js"></script>
+<script src="https://ims.blablacar.pro/white-label/widget/assets/js/vendor.js"></script>
+<script src="https://ims.blablacar.pro/white-label/widget/assets/js/app.js"></script>
+
 </body>
 </html>
