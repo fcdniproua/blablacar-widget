@@ -16,14 +16,10 @@
         let redirectUrl = './widget.html';
         
         // Якщо є специфічний path, передаємо його як hash
-        if (currentPath && currentPath !== '/' && currentPath !== '/blablacar-widget/' && currentPath !== '/blablacar-widget/index.html') {
-            // Витягуємо частину після /blablacar-widget/
-            const pathAfterBase = currentPath.replace('/blablacar-widget', '');
-            if (pathAfterBase && pathAfterBase !== '/') {
-                redirectUrl += '#' + pathAfterBase;
-                if (currentSearch) {
-                    redirectUrl += currentSearch;
-                }
+        if (currentPath && currentPath !== '/' && currentPath !== '/index.html') {
+            redirectUrl += '#' + currentPath;
+            if (currentSearch) {
+                redirectUrl += currentSearch;
             }
         } else if (currentHash) {
             redirectUrl += currentHash;

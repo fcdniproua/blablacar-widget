@@ -1,4 +1,4 @@
-# GitHub Pages configuration for blablacar-widget
+# GitHub Pages configuration for root domain
 plugins:
   - jekyll-redirect-from
 

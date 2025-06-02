@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BlaBlaCar Widget - Redirecting...</title>
     <script>
-        // GitHub Pages SPA fallback для blablacar-widget репозиторію
+        // GitHub Pages SPA fallback для root domain
         const currentPath = window.location.pathname;
         const currentSearch = window.location.search;
         const currentHash = window.location.hash;
@@ -13,32 +13,23 @@
         console.log('404 fallback activated for:', currentPath);
         console.log('Full URL:', window.location.href);
         
-        // Базовий URL для репозиторію blablacar-widget
+        // Базовий URL для root domain
         const baseUrl = window.location.origin;
-        const repoPath = '/blablacar-widget';
         
         // Формуємо новий URL з hash-based routing
-        let redirectUrl = baseUrl + repoPath + '/widget.html';
+        let redirectUrl = baseUrl + '/widget.html';
         
         // Обробляємо різні випадки
         if (currentPath && 
-            currentPath !== '/blablacar-widget/404.html' && 
-            currentPath !== '/blablacar-widget/' && 
-            currentPath !== '/blablacar-widget/widget.html' &&
-            currentPath !== '/blablacar-widget/index.html') {
+            currentPath !== '/404.html' && 
+            currentPath !== '/' && 
+            currentPath !== '/widget.html' &&
+            currentPath !== '/index.html') {
             
-            // Витягуємо частину після /blablacar-widget/ або весь path якщо це не blablacar-widget
-            let pathToConvert = currentPath;
-            
-            if (currentPath.startsWith('/blablacar-widget/')) {
-                pathToConvert = currentPath.replace('/blablacar-widget', '');
-            }
-            
-            if (pathToConvert && pathToConvert !== '/') {
-                redirectUrl += '#' + pathToConvert;
-                if (currentSearch) {
-                    redirectUrl += currentSearch;
-                }
+            // Передаємо весь path як hash
+            redirectUrl += '#' + currentPath;
+            if (currentSearch) {
+                redirectUrl += currentSearch;
             }
         }
         
