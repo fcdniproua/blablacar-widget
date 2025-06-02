@@ -1,0 +1,18 @@
+# GitHub Pages configuration for blablacar-widget
+plugins:
+  - jekyll-redirect-from
+
+# Include all files (including those starting with _)
+include:
+  - .nojekyll
+
+# Disable Jekyll processing for faster builds
+safe: true
+source: .
+destination: ./_site
+
+# Custom 404 page
+404: /404.html
+
+# Enable redirects
+redirect_from: [] 

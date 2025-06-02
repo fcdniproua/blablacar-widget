@@ -5,37 +5,62 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BlaBlaCar Widget - Redirecting...</title>
     <script>
-        // GitHub Pages SPA fallback
-        // Зберігаємо оригінальний URL і перенаправляємо на widget.html
+        // GitHub Pages SPA fallback для blablacar-widget репозиторію
         const currentPath = window.location.pathname;
         const currentSearch = window.location.search;
         const currentHash = window.location.hash;
         
         console.log('404 fallback activated for:', currentPath);
+        console.log('Full URL:', window.location.href);
+        
+        // Базовий URL для репозиторію blablacar-widget
+        const baseUrl = window.location.origin;
+        const repoPath = '/blablacar-widget';
         
         // Формуємо новий URL з hash-based routing
-        let redirectUrl = '/widget.html';
+        let redirectUrl = baseUrl + repoPath + '/widget.html';
         
-        if (currentPath !== '/404.html' && currentPath !== '/' && currentPath !== '/widget.html') {
-            // Перетворюємо path на hash
-            redirectUrl += '#' + currentPath;
-            if (currentSearch) {
-                redirectUrl += currentSearch;
+        // Обробляємо різні випадки
+        if (currentPath && 
+            currentPath !== '/blablacar-widget/404.html' && 
+            currentPath !== '/blablacar-widget/' && 
+            currentPath !== '/blablacar-widget/widget.html' &&
+            currentPath !== '/blablacar-widget/index.html') {
+            
+            // Витягуємо частину після /blablacar-widget/ або весь path якщо це не blablacar-widget
+            let pathToConvert = currentPath;
+            
+            if (currentPath.startsWith('/blablacar-widget/')) {
+                pathToConvert = currentPath.replace('/blablacar-widget', '');
+            }
+            
+            if (pathToConvert && pathToConvert !== '/') {
+                redirectUrl += '#' + pathToConvert;
+                if (currentSearch) {
+                    redirectUrl += currentSearch;
+                }
             }
         }
         
+        // Якщо є hash, але немає path в redirect URL
         if (currentHash && !redirectUrl.includes('#')) {
             redirectUrl += currentHash;
         }
         
         console.log('Redirecting to:', redirectUrl);
+        
+        // Негайне перенаправлення
         window.location.replace(redirectUrl);
     </script>
 </head>
 <body>
     <div style="text-align: center; padding: 50px; font-family: Arial, sans-serif;">
         <h2>Перенаправлення...</h2>
-        <p>Будь ласка, зачекайте, йде перенаправлення на віджет BlaBlaCar.</p>
+        <p>Йде перенаправлення на віджет BlaBlaCar...</p>
+        <p><small>URL: <span id="current-url"></span></small></p>
+        <script>
+            document.getElementById('current-url').textContent = window.location.href;
+        </script>
     </div>
 </body>
 </html> 

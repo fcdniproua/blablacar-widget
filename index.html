@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BlaBlaCar Widget</title>
+    <script>
+        // Перенаправляємо на widget.html зберігаючи URL структуру
+        const currentPath = window.location.pathname;
+        const currentSearch = window.location.search;
+        const currentHash = window.location.hash;
+        
+        console.log('Index.html - Current path:', currentPath);
+        console.log('Index.html - Full URL:', window.location.href);
+        
+        let redirectUrl = './widget.html';
+        
+        // Якщо є специфічний path, передаємо його як hash
+        if (currentPath && currentPath !== '/' && currentPath !== '/blablacar-widget/' && currentPath !== '/blablacar-widget/index.html') {
+            // Витягуємо частину після /blablacar-widget/
+            const pathAfterBase = currentPath.replace('/blablacar-widget', '');
+            if (pathAfterBase && pathAfterBase !== '/') {
+                redirectUrl += '#' + pathAfterBase;
+                if (currentSearch) {
+                    redirectUrl += currentSearch;
+                }
+            }
+        } else if (currentHash) {
+            redirectUrl += currentHash;
+        }
+        
+        console.log('Index.html - Redirecting to:', redirectUrl);
+        window.location.replace(redirectUrl);
+    </script>
+</head>
+<body>
+    <div style="text-align: center; padding: 50px; font-family: Arial, sans-serif;">
+        <h2>Завантаження віджета BlaBlaCar...</h2>
+        <p>Якщо перенаправлення не відбулося автоматично, <a href="./widget.html">натисніть тут</a>.</p>
+    </div>
+</body>
+</html> 
