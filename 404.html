@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BlaBlaCar Widget - Redirecting...</title>
+    <script>
+        // GitHub Pages SPA fallback
+        // Зберігаємо оригінальний URL і перенаправляємо на widget.html
+        const currentPath = window.location.pathname;
+        const currentSearch = window.location.search;
+        const currentHash = window.location.hash;
+        
+        console.log('404 fallback activated for:', currentPath);
+        
+        // Формуємо новий URL з hash-based routing
+        let redirectUrl = '/widget.html';
+        
+        if (currentPath !== '/404.html' && currentPath !== '/') {
+            // Перетворюємо path на hash
+            redirectUrl += '#' + currentPath;
+            if (currentSearch) {
+                redirectUrl += currentSearch;
+            }
+        }
+        
+        if (currentHash && !redirectUrl.includes('#')) {
+            redirectUrl += currentHash;
+        }
+        
+        console.log('Redirecting to:', redirectUrl);
+        window.location.replace(redirectUrl);
+    </script>
+</head>
+<body>
+    <div style="text-align: center; padding: 50px; font-family: Arial, sans-serif;">
+        <h2>Перенаправлення...</h2>
+        <p>Будь ласка, зачекайте, йде перенаправлення на віджет BlaBlaCar.</p>
+    </div>
+</body>
+</html> 

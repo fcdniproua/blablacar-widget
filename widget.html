@@ -150,35 +150,9 @@ function sendHeightToParent() {
     }
 }
 
-// Функція для відстеження змін роуту
+// Спрощена функція для відстеження змін роуту (без перехоплення навігації)
 function trackRouteChanges() {
     let currentRoute = getCurrentRoute();
-    
-    // Перехоплюємо зміни history API
-    const originalPushState = history.pushState;
-    const originalReplaceState = history.replaceState;
-    
-    history.pushState = function(...args) {
-        originalPushState.apply(this, args);
-        setTimeout(() => {
-            const newRoute = getCurrentRoute();
-            if (newRoute !== currentRoute) {
-                currentRoute = newRoute;
-                handleRouteChange(newRoute);
-            }
-        }, 100);
-    };
-    
-    history.replaceState = function(...args) {
-        originalReplaceState.apply(this, args);
-        setTimeout(() => {
-            const newRoute = getCurrentRoute();
-            if (newRoute !== currentRoute) {
-                currentRoute = newRoute;
-                handleRouteChange(newRoute);
-            }
-        }, 100);
-    };
     
     // Обробляємо popstate події (кнопки назад/вперед)
     window.addEventListener('popstate', () => {
@@ -202,7 +176,7 @@ function trackRouteChanges() {
         }, 100);
     });
     
-    // Періодично перевіряємо зміни роуту (на випадок, якщо віджет використовує інші методи навігації)
+    // Періодично перевіряємо зміни роуту
     setInterval(() => {
         const newRoute = getCurrentRoute();
         if (newRoute !== currentRoute) {
@@ -255,7 +229,7 @@ function handleRouteChange(route) {
     }
 }
 
-// Спостерігач за змінами DOM (зберігаємо оригінальну логіку)
+// Спостерігач за змінами DOM
 const observer = new MutationObserver((mutations) => {
     let shouldUpdate = false;
     
@@ -328,11 +302,18 @@ window.addEventListener('message', function(event) {
     }
 });
 
-// Обробка помилок навігації
+// Спрощена обробка помилок
 window.addEventListener('error', function(event) {
     console.warn('Помилка:', event.error);
     
-    if (event.message && (event.message.includes('404') || event.message.includes('Not Found'))) {
+    // Базова обробка 404 помилок
+    if (event.message && (
+        event.message.includes('404') || 
+        event.message.includes('Not Found') ||
+        event.message.includes('Cannot GET')
+    )) {
+        console.error('Виявлено 404 помилку:', event.message);
+        
         if (window.parent && window.parent !== window) {
             window.parent.postMessage({
                 type: 'navigation_error',
@@ -342,6 +323,31 @@ window.addEventListener('error', function(event) {
                 source: 'blablacar-widget'
             }, '*');
         }
+    }
+});
+
+// Обробка відхилених промісів
+window.addEventListener('unhandledrejection', function(event) {
+    console.warn('Відхилений проміс:', event.reason);
+    
+    const error = event.reason;
+    if (error && (
+        (typeof error === 'string' && error.includes('404')) ||
+        (error.message && error.message.includes('404')) ||
+        (error.status === 404)
+    )) {
+        console.error('404 в промісі:', error);
+        
+        if (window.parent && window.parent !== window) {
+            window.parent.postMessage({
+                type: 'promise_rejection_404',
+                error: error.toString(),
+                url: window.location.href,
+                source: 'blablacar-widget'
+            }, '*');
+        }
+        
+        event.preventDefault();
     }
 });
 
