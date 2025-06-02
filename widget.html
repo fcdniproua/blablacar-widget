@@ -56,6 +56,41 @@ let lastHeight = 0;
 let heightCheckInterval;
 let isWidgetLoaded = false;
 
+// GitHub Pages SPA fallback - обробка URL з hash
+function handleGitHubPagesSPA() {
+    const hash = window.location.hash;
+    const pathname = window.location.pathname;
+    
+    console.log('Current URL:', window.location.href);
+    console.log('Hash:', hash);
+    console.log('Pathname:', pathname);
+    
+    // Якщо є hash з роутом, витягуємо його
+    if (hash && hash.includes('/')) {
+        const route = hash.substring(1); // Прибираємо #
+        console.log('Extracted route from hash:', route);
+        
+        // Обробляємо роут
+        if (route.includes('/buy/success')) {
+            setTimeout(() => {
+                handleRouteChange('success');
+            }, 1000);
+        } else if (route.includes('/buy/error')) {
+            setTimeout(() => {
+                handleRouteChange('error');
+            }, 1000);
+        } else if (route.includes('/checkout')) {
+            setTimeout(() => {
+                handleRouteChange('checkout');
+            }, 1000);
+        } else if (route.includes('/search')) {
+            setTimeout(() => {
+                handleRouteChange('search');
+            }, 1000);
+        }
+    }
+}
+
 // Функція для визначення поточного роуту віджета
 function getCurrentRoute() {
     const url = window.location.href;
@@ -69,10 +104,10 @@ function getCurrentRoute() {
     if (url.includes('/checkout') || path.includes('/checkout') || hash.includes('checkout')) {
         return 'checkout';
     }
-    if (url.includes('/buy/success') || path.includes('/buy/success') || hash.includes('success')) {
+    if (url.includes('/buy/success') || path.includes('/buy/success') || hash.includes('success') || hash.includes('/buy/success')) {
         return 'success';
     }
-    if (url.includes('/buy/error') || path.includes('/buy/error') || hash.includes('error')) {
+    if (url.includes('/buy/error') || path.includes('/buy/error') || hash.includes('error') || hash.includes('/buy/error')) {
         return 'error';
     }
     
@@ -150,7 +185,7 @@ function sendHeightToParent() {
     }
 }
 
-// Спрощена функція для відстеження змін роуту (без перехоплення навігації)
+// Функція для відстеження змін роуту
 function trackRouteChanges() {
     let currentRoute = getCurrentRoute();
     
@@ -168,6 +203,7 @@ function trackRouteChanges() {
     // Обробляємо зміни hash
     window.addEventListener('hashchange', () => {
         setTimeout(() => {
+            handleGitHubPagesSPA();
             const newRoute = getCurrentRoute();
             if (newRoute !== currentRoute) {
                 currentRoute = newRoute;
@@ -211,10 +247,11 @@ function handleRouteChange(route) {
         if (window.parent && window.parent !== window) {
             window.parent.postMessage({
                 type: 'payment_success',
-                data: { route: 'success', timestamp: Date.now() },
+                data: { route: 'success', timestamp: Date.now(), url: window.location.href },
                 source: 'blablacar-widget'
             }, '*');
         }
+        console.log('✅ Успішна оплата виявлена!');
     }
     
     if (route === 'error') {
@@ -222,10 +259,11 @@ function handleRouteChange(route) {
         if (window.parent && window.parent !== window) {
             window.parent.postMessage({
                 type: 'payment_error',
-                data: { route: 'error', timestamp: Date.now() },
+                data: { route: 'error', timestamp: Date.now(), url: window.location.href },
                 source: 'blablacar-widget'
             }, '*');
         }
+        console.log('❌ Помилка оплати виявлена!');
     }
 }
 
@@ -302,7 +340,7 @@ window.addEventListener('message', function(event) {
     }
 });
 
-// Спрощена обробка помилок
+// Обробка помилок
 window.addEventListener('error', function(event) {
     console.warn('Помилка:', event.error);
     
@@ -354,6 +392,10 @@ window.addEventListener('unhandledrejection', function(event) {
 // Функція ініціалізації
 function initializeWidget() {
     console.log('Ініціалізація BlaBlaCar віджета...');
+    console.log('Поточний URL:', window.location.href);
+    
+    // Обробляємо GitHub Pages SPA routing
+    handleGitHubPagesSPA();
     
     // Запускаємо відстеження змін роуту
     trackRouteChanges();
@@ -416,4 +458,4 @@ setTimeout(sendHeightToParent, 3000);
 <script src="https://ims.blablacar.pro/white-label/widget/assets/js/app.js"></script>
 
 </body>
-</html>
+</html> 

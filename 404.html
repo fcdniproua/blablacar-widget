@@ -16,7 +16,7 @@
         // Формуємо новий URL з hash-based routing
         let redirectUrl = '/widget.html';
         
-        if (currentPath !== '/404.html' && currentPath !== '/') {
+        if (currentPath !== '/404.html' && currentPath !== '/' && currentPath !== '/widget.html') {
             // Перетворюємо path на hash
             redirectUrl += '#' + currentPath;
             if (currentSearch) {
